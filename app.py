@@ -130,7 +130,7 @@ elif menu == "🎯 個股深度戰情與 AI 預測室":
     
     search_col1, search_col2 = st.columns([3, 1])
     with search_col1:
-        search_query = st.text_input("👉 請輸入股票代號 (例如: 3008, 2330, 2317)：", "3008")
+        search_query = st.text_input("👉 請輸入股票代號 (例如: 3008, 2330, 2317)：", )
 
     if search_query:
         clean_code = search_query.strip()
@@ -275,7 +275,7 @@ elif menu == "🎯 個股深度戰情與 AI 預測室":
 # ==========================================
 elif menu == "🏛️ 個股三大法人籌碼動態 (5日/30日)":
     st.title("🏛️ 指定個股三大法人籌碼雙維度深度解析")
-    inst_query = st.text_input("👉 請輸入股票代號 (例如: 3008 大立光)：", "3008")
+    inst_query = st.text_input("👉 請輸入股票代號 (例如: 3008 大立光)：",)
 
     if inst_query:
         clean_inst = inst_query.strip()
