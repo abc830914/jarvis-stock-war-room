@@ -137,7 +137,7 @@ if menu == "🏠 系統首頁 (戰情大廳)":
 elif menu == "🎯 個股戰情與 K 線工作站":
     col_search, col_space = st.columns([1, 2])
     with col_search:
-        search_query = st.text_input("輸入代號:", , label_visibility="collapsed", placeholder="🔍 輸入股票代號 (例: 3008, 2330)...")
+        search_query = st.text_input("輸入代號:", "3008", label_visibility="collapsed", placeholder="🔍 輸入股票代號 (例: 3008, 2330)...")
 
     if search_query:
         clean_code = search_query.strip()
