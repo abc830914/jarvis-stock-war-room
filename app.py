@@ -69,14 +69,14 @@ custom_css = """
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # ==========================================
-# 1. 頂部狀態列 (Status Bar)
+# 1. 頂部狀態列 (繁體中文版)
 # ==========================================
 now = datetime.datetime.now()
-st.markdown(f"<div style='color:#78716c; font-size:12px; margin-top:10px; margin-bottom:-15px;'>⚡ JARVIS SYSTEM ONLINE ｜ MARKET OPEN: {now.strftime('%Y-%m-%d')} 09:00:00 ｜ LAST SYNC: {now.strftime('%H:%M:%S')}</div>", unsafe_allow_html=True)
+st.markdown(f"<div style='color:#78716c; font-size:12px; margin-top:10px; margin-bottom:-15px;'>⚡ JARVIS 智能核心連線正常 ｜ 今日開盤基準: {now.strftime('%Y-%m-%d')} 09:00:00 ｜ 最後資料同步: {now.strftime('%H:%M:%S')}</div>", unsafe_allow_html=True)
 st.markdown("<hr style='border-color:#d4ccc2;'>", unsafe_allow_html=True)
 
 # ==========================================
-# 2. 側邊欄控制中心 (Control Center)
+# 2. 側邊欄控制中心 (完整保留自選股 Watchlist)
 # ==========================================
 st.sidebar.markdown("### ⚙️ 控制中心")
 menu = st.sidebar.radio(
@@ -92,6 +92,7 @@ menu = st.sidebar.radio(
 
 st.sidebar.markdown("<hr style='border-color:#d4ccc2;'>", unsafe_allow_html=True)
 with st.sidebar.expander("📂 自選股監控 (Watchlist)", expanded=True):
+    st.caption("點擊快速切換群組")
     st.button("🔥 短線爆量沖銷組 (4)")
     st.button("🛡️ 投信波段認養組 (6)")
     st.button("💰 ETF 被動資金池 (3)")
@@ -125,13 +126,29 @@ if menu == "🏠 系統首頁 (戰情大廳)":
             st.info("⚡ **[快訊 09:15]** 台積電 ADR 溢價，開盤跳空站上月線。\n⚡ **[快訊 10:30]** 投信連 8 加碼，鎖定散熱。")
         
     with col_sop:
-        st.markdown("<h4>☑️ 交易員 SOP</h4>", unsafe_allow_html=True)
+        st.markdown("<h4>☑️ 交易員 SOP 紀律檢核</h4>", unsafe_allow_html=True)
         st.markdown("<div style='background-color:#ede7df; padding:15px; border-radius:8px; border:1px solid #d9d0c7;'>", unsafe_allow_html=True)
-        st.checkbox("清晨 07:10 檢視夜盤與報告", value=True)
-        st.checkbox("開盤前 09:00 嚴禁盲目追高", value=True)
-        st.checkbox("盤中嚴守「量<1000張禁當沖」")
-        st.checkbox("下班 20:30 更新數據")
-        st.checkbox("夜間 21:00 覆核戰略目標")
+        
+        # --- 讓 SOP 真正有感互動：透過 Checkbox 計算即時進度 ---
+        c1 = st.checkbox("清晨 07:10 檢視夜盤與報告")
+        c2 = st.checkbox("開盤前 09:00 嚴禁盲目追高")
+        c3 = st.checkbox("盤中嚴守「量<1000張禁當沖」")
+        c4 = st.checkbox("下班 20:30 更新數據")
+        c5 = st.checkbox("夜間 21:00 覆核戰略目標")
+        
+        # 計算勾選完成度
+        checked_count = sum([c1, c2, c3, c4, c5])
+        progress_val = checked_count / 5.0
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.caption(f"🎯 SOP 執行進度 ({checked_count}/5)")
+        st.progress(progress_val)
+        
+        if checked_count == 5:
+            st.success("🟢 戰備就緒！今日操盤紀律 100% 達標！")
+        else:
+            st.warning("🔴 戰備整備中... 請落實各項紀律。")
+            
         st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
@@ -146,7 +163,7 @@ elif menu == "🎯 個股戰情與 K 線工作站":
         clean_code = search_query.strip()
         hist = pd.DataFrame()
         
-        with st.spinner(f"SYNCHRONIZING DATA [{clean_code}]..."):
+        with st.spinner(f"正在同步數據 [{clean_code}]..."):
             for suffix in ['.TW', '.TWO']:
                 try:
                     ticker = yf.Ticker(f"{clean_code}{suffix}")
@@ -204,7 +221,6 @@ elif menu == "🎯 個股戰情與 K 線工作站":
             vol_colors = ['#dc2626' if val >= 0 else '#059669' for val in dummy_vol]
             fig.add_trace(go.Bar(x=df_chart.index, y=dummy_vol, marker_color=vol_colors, name='買賣超'), row=2, col=1)
 
-            # 圖表背景同步改為米色系風格
             fig.update_layout(
                 plot_bgcolor='#ede7df', paper_bgcolor='#ede7df', height=550, margin=dict(l=5, r=5, t=5, b=5), 
                 hovermode="x unified", showlegend=False, xaxis_rangeslider_visible=False, font=dict(color="#57534e")
@@ -222,7 +238,7 @@ elif menu == "🎯 個股戰情與 K 線工作站":
                 buy_shares = [int(vol_today * (0.15 - i * 0.006)) for i in range(20)]
                 sell_shares = [int(vol_today * (0.12 - i * 0.005)) for i in range(20)]
                 stars_buy = [("★★★★★" if i < 5 else "★★★★" if i < 12 else "★★★") for i in range(20)]
-                stars_sell = [("⚠ 警戒" if i < 5 else "⚠️️ 注意" if i < 12 else "一般") for i in range(20)]
+                stars_sell = [("⚠ 警戒" if i < 5 else "⚠ 注意" if i < 12 else "一般") for i in range(20)]
 
                 df_top_buy = pd.DataFrame({"排名": [f"第{i+1}名" for i in range(20)], "分點": top_buyers, "買進(張)": buy_shares, "星級": stars_buy})
                 df_top_sell = pd.DataFrame({"排名": [f"第{i+1}名" for i in range(20)], "分點": top_sellers, "賣出(張)": sell_shares, "星級": stars_sell})
@@ -253,7 +269,7 @@ elif menu == "🏛️ 三大法人籌碼透視":
     if inst_query:
         clean_inst = inst_query.strip()
         hist_inst = pd.DataFrame()
-        with st.spinner("SYNCHRONIZING INSTITUTIONAL DATA..."):
+        with st.spinner("正在同步法人數據..."):
             for suffix in ['.TW', '.TWO']:
                 try:
                     ticker = yf.Ticker(f"{clean_inst}{suffix}")
