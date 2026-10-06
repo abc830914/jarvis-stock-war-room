@@ -6,16 +6,16 @@ from plotly.subplots import make_subplots
 import datetime
 
 # ==========================================
-# 0. 系統層級設定 (強制全螢幕無留白)
+# 0. 系統層級設定 (強制全螢幕無留白，並保留側邊欄展開按鈕)
 # ==========================================
 st.set_page_config(page_title="JARVIS 頂級操盤工作站", page_icon="⚡", layout="wide", initial_sidebar_state="expanded")
 
-# --- 溫潤米色護眼版 (Warm Beige / Cream) CSS 注入 ---
+# --- 溫潤米色護眼版 (Warm Beige & Soft Morandi Colors) CSS 注入 ---
 custom_css = """
 <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden !important;}
+    header[data-testid="stHeader"] {background: transparent !important; visibility: visible !important;}
     
     .block-container {
         padding-top: 0rem !important; 
@@ -44,7 +44,7 @@ custom_css = """
     .stMetric label { color: #6b6257 !important; font-size: 13px !important; font-weight: 600 !important; }
     .stMetric div[data-testid="stMetricValue"] { color: #1c1917 !important; font-size: 24px !important; font-weight: 700 !important; }
     
-    /* 頁籤 (Tabs) 重構：加大間距與文字清晰度 */
+    /* 頁籤 (Tabs) 重構 */
     .stTabs [data-baseweb="tab-list"] { gap: 12px; background-color: transparent; margin-bottom: 15px; }
     .stTabs [data-baseweb="tab"] {
         height: 45px; background-color: #e8e2da;
@@ -53,14 +53,14 @@ custom_css = """
     }
     .stTabs [aria-selected="true"] { background-color: #b45309 !important; color: #ffffff !important; border-color: #b45309 !important; }
     
-    /* AI 動態標籤面板 */
+    /* AI 柔和標籤面板 (低彩度莫蘭迪色) */
     .ai-panel {
         background-color: #ede7df; padding: 15px 20px; border-radius: 8px;
         border: 1px solid #d9d0c7; display: flex; justify-content: space-between;
         align-items: center; margin-bottom: 15px; color: #38322c;
     }
-    .ai-tag { background-color: #dc2626; color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 14px;}
-    .ai-tag.green { background-color: #059669; }
+    .ai-tag { background-color: #b85c50; color: #fffdf9; padding: 5px 12px; border-radius: 4px; font-weight: bold; font-size: 14px;}
+    .ai-tag.green { background-color: #5c8374; }
 
     /* 文字標題全面適應米色系 */
     h1, h2, h3, h4, h5, h6, p, span { color: #292524 !important; }
@@ -130,7 +130,7 @@ if menu == "🏠 系統首頁 (戰情大廳)":
         
         c1 = st.checkbox("清晨 07:10 檢視夜盤與報告")
         c2 = st.checkbox("開盤前 09:00 嚴禁盲目追高")
-        c3 = st.checkbox("盤中嚴守「量<1000張禁當沖」")
+        c3 = st.checkbox("盤中嚴守協議「量<1000張禁當沖」")
         c4 = st.checkbox("下班 20:30 更新數據")
         c5 = st.checkbox("夜間 21:00 覆核戰略目標")
         
@@ -149,7 +149,7 @@ if menu == "🏠 系統首頁 (戰情大廳)":
         st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
-# 模組 2：個股深度戰情與法人同步工作站 (全面繁體中文強制轉譯)
+# 模組 2：個股深度戰情與法人同步工作站
 # ==========================================
 elif menu == "🎯 個股深度戰情與法人同步工作站":
     col_search, col_space = st.columns([1, 2])
@@ -160,7 +160,6 @@ elif menu == "🎯 個股深度戰情與法人同步工作站":
         clean_code = search_query.strip()
         hist = pd.DataFrame()
         
-        # 內建台股常用代號對應字典（徹底解決英文雜訊問題）
         stock_name_map = {
             "2330": "台灣積體電路製造 (台積電)",
             "2317": "鴻海精密工業 (鴻海)",
@@ -180,10 +179,6 @@ elif menu == "🎯 個股深度戰情與法人同步工作站":
                     temp_hist = ticker.history(period="3mo")
                     if not temp_hist.empty:
                         hist = temp_hist
-                        # 如果字典裡沒有，嘗試從 Yahoo 抓取，但如果抓到英文則自動過濾轉為中文預設
-                        raw_name = ticker.info.get('longName', ticker.info.get('shortName', ''))
-                        if raw_name and not any(ord(char) > 128 for char in raw_name[:3]): # 檢查是否為純英文
-                            pass # 保留預設精緻中文
                         break
                 except: pass
 
@@ -195,12 +190,9 @@ elif menu == "🎯 個股深度戰情與法人同步工作站":
             ma20 = hist['Close'].tail(20).mean()
             is_strong = today_close > ma5 > ma20
             
-            color = "#dc2626" if change >= 0 else "#059669"
+            color = "#b85c50" if change >= 0 else "#5c8374"
             sign = "+" if change > 0 else ""
             
-            # ==========================================
-            # 💡 完美繁體中文標頭卡片
-            # ==========================================
             st.markdown(f"""
             <div style="background-color: #ede7df; padding: 18px 22px; border-radius: 8px; border: 1px solid #d9d0c7; margin-bottom: 15px;">
                 <div style="font-size: 13px; color: #78716c; font-weight: 600; margin-bottom: 6px;">📌 目前鎖定操盤標的與即時報價：</div>
@@ -231,29 +223,27 @@ elif menu == "🎯 個股深度戰情與法人同步工作站":
             </div>
             """, unsafe_allow_html=True)
 
-            # 三大同步分頁
             sub_tab1, sub_tab2, sub_tab3 = st.tabs([
                 "📈 1. K線工作站與主力分點", 
                 "🏛️ 2. 三大法人籌碼雙軌透視 (5日/30日)", 
                 "🌊 3. 產業資金流向與起漲雷達"
             ])
 
-            # --- 子分頁 1：K 線與分點 ---
             with sub_tab1:
                 df_chart = hist.tail(150) 
                 fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.75, 0.25])
                 
                 fig.add_trace(go.Candlestick(
                     x=df_chart.index, open=df_chart['Open'], high=df_chart['High'], low=df_chart['Low'], close=df_chart['Close'],
-                    increasing_line_color='#dc2626', increasing_fillcolor='#dc2626',
-                    decreasing_line_color='#059669', decreasing_fillcolor='#059669', name='K線'
+                    increasing_line_color='#b85c50', increasing_fillcolor='#b85c50',
+                    decreasing_line_color='#5c8374', decreasing_fillcolor='#5c8374', name='K線'
                 ), row=1, col=1)
                 
                 fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart['Close'].rolling(5).mean(), line=dict(color='#2563eb', width=1.5), name='5MA'), row=1, col=1)
                 fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart['Close'].rolling(20).mean(), line=dict(color='#d97706', width=1.5), name='20MA'), row=1, col=1)
 
                 dummy_vol = [int(v * (1 if c >= 0 else -1) * 0.1) for v, c in zip(df_chart['Volume'], df_chart['Close'].diff().fillna(1))]
-                vol_colors = ['#dc2626' if val >= 0 else '#059669' for val in dummy_vol]
+                vol_colors = ['#b85c50' if val >= 0 else '#5c8374' for val in dummy_vol]
                 fig.add_trace(go.Bar(x=df_chart.index, y=dummy_vol, marker_color=vol_colors, name='買賣超'), row=2, col=1)
 
                 fig.update_layout(
@@ -280,13 +270,12 @@ elif menu == "🎯 個股深度戰情與法人同步工作站":
 
                     col_b20, col_s20 = st.columns(2)
                     with col_b20:
-                        st.markdown("<h5 style='color:#dc2626;'>🔴 買超主力大咖分點</h5>", unsafe_allow_html=True)
+                        st.markdown("<h5 style='color:#b85c50;'>🔴 買超主力大咖分點</h5>", unsafe_allow_html=True)
                         st.dataframe(df_top_buy, use_container_width=True, hide_index=True, height=400, column_config={"買進(張)": st.column_config.ProgressColumn("買進力道", format="%d", min_value=0, max_value=max(buy_shares)*1.2)})
                     with col_s20:
-                        st.markdown("<h5 style='color:#059669;'>🟢 賣超調節分點</h5>", unsafe_allow_html=True)
+                        st.markdown("<h5 style='color:#5c8374;'>🟢 賣超調節分點</h5>", unsafe_allow_html=True)
                         st.dataframe(df_top_sell, use_container_width=True, hide_index=True, height=400, column_config={"賣出(張)": st.column_config.ProgressColumn("賣出力道", format="%d", min_value=0, max_value=max(sell_shares)*1.2)})
 
-            # --- 子分頁 2：三大法人同步透視 ---
             with sub_tab2:
                 df_30d = hist.tail(30).copy()
                 dates_30 = df_30d.index.strftime('%m/%d').tolist()
@@ -317,23 +306,22 @@ elif menu == "🎯 個股深度戰情與法人同步工作站":
                 with inst_tab1:
                     fig_5 = go.Figure()
                     fig_5.add_trace(go.Bar(x=dates_5, y=foreign_5, name='外資', marker_color='#2563eb'))
-                    fig_5.add_trace(go.Bar(x=dates_5, y=trust_5, name='投信', marker_color='#dc2626'))
+                    fig_5.add_trace(go.Bar(x=dates_5, y=trust_5, name='投信', marker_color='#b85c50'))
                     fig_5.add_trace(go.Bar(x=dates_5, y=dealer_5, name='自營', marker_color='#d97706'))
                     fig_5.update_layout(plot_bgcolor='#ede7df', paper_bgcolor='#ede7df', font=dict(color="#57534e"), barmode='group', height=350, hovermode="x unified", margin=dict(l=5, r=5, t=10, b=5))
                     st.plotly_chart(fig_5, use_container_width=True, config={'displayModeBar': False})
                 with inst_tab2:
                     fig_30 = go.Figure()
                     fig_30.add_trace(go.Bar(x=dates_30, y=foreign_30, name='外資', marker_color='#2563eb'))
-                    fig_30.add_trace(go.Bar(x=dates_30, y=trust_30, name='投信', marker_color='#dc2626'))
+                    fig_30.add_trace(go.Bar(x=dates_30, y=trust_30, name='投信', marker_color='#b85c50'))
                     fig_30.add_trace(go.Bar(x=dates_30, y=dealer_30, name='自營', marker_color='#d97706'))
                     fig_30.update_layout(plot_bgcolor='#ede7df', paper_bgcolor='#ede7df', font=dict(color="#57534e"), barmode='group', height=350, hovermode="x unified", margin=dict(l=5, r=5, t=10, b=5))
                     st.plotly_chart(fig_30, use_container_width=True, config={'displayModeBar': False})
 
-            # --- 子分頁 3：產業資金與起漲雷達 ---
             with sub_tab3:
                 st.markdown("<h4>🌊 個股關聯產業資金流向與起漲雷達</h4>", unsafe_allow_html=True)
                 df_ind = pd.DataFrame({"板塊": ["半導體", "電子組件", "電腦", "金融", "航運", "傳產", "生技", "通信"], "淨流入(億)": [145.2, 62.8, 48.5, 31.2, 24.6, -12.4, -18.5, -25.1]})
-                fig_ind = go.Figure(go.Bar(x=df_ind["板塊"], y=df_ind["淨流入(億)"], marker_color=['#dc2626' if x>0 else '#059669' for x in df_ind["淨流入(億)"]]))
+                fig_ind = go.Figure(go.Bar(x=df_ind["板塊"], y=df_ind["淨流入(億)"], marker_color=['#b85c50' if x>0 else '#5c8374' for x in df_ind["淨流入(億)"]]))
                 fig_ind.update_layout(plot_bgcolor='#ede7df', paper_bgcolor='#ede7df', font=dict(color="#57534e"), height=300, margin=dict(t=10, b=10))
                 st.plotly_chart(fig_ind, use_container_width=True, config={'displayModeBar': False})
 
@@ -351,7 +339,7 @@ elif menu == "🎯 個股深度戰情與法人同步工作站":
             st.warning("⚠️ 請輸入有效的股票代號（例如 2330、2317），系統將立即為您同步解構所有維度！")
 
 # ==========================================
-# 模組 3：產業資金與起漲雷達 (獨立大總覽)
+# 模組 3：產業資金與起漲雷達
 # ==========================================
 elif menu == "🌊 產業資金與起漲雷達":
     st.markdown("<h2>🌊 總體產業資金流向與起漲雷達總覽</h2>", unsafe_allow_html=True)
@@ -361,7 +349,7 @@ elif menu == "🌊 產業資金與起漲雷達":
     c3.metric("資金流出避險", "生技醫療", "-1.8% (佔 4%)")
 
     df_ind = pd.DataFrame({"板塊": ["半導體", "電子組件", "電腦", "金融", "航運", "傳產", "生技", "通信"], "淨流入(億)": [145.2, 62.8, 48.5, 31.2, 24.6, -12.4, -18.5, -25.1]})
-    fig_ind = go.Figure(go.Bar(x=df_ind["板塊"], y=df_ind["淨流入(億)"], marker_color=['#dc2626' if x>0 else '#059669' for x in df_ind["淨流入(億)"]]))
+    fig_ind = go.Figure(go.Bar(x=df_ind["板塊"], y=df_ind["淨流入(億)"], marker_color=['#b85c50' if x>0 else '#5c8374' for x in df_ind["淨流入(億)"]]))
     fig_ind.update_layout(plot_bgcolor='#ede7df', paper_bgcolor='#ede7df', font=dict(color="#57534e"), height=300, margin=dict(t=10, b=10))
     st.plotly_chart(fig_ind, use_container_width=True, config={'displayModeBar': False})
 
@@ -379,7 +367,7 @@ elif menu == "🌊 產業資金與起漲雷達":
 # 模組 4：系統性風險追蹤
 # ==========================================
 elif menu == "🛡️ 大盤系統風險濾網":
-    st.markdown("<h2>🛡️ 總體經濟與風險濾網</h2>", unsafe_allow_html=True)
+    st.markdown("<h2>🛡️️ 總體經濟與風險濾網</h2>", unsafe_allow_html=True)
     r1, r2, r3, r4 = st.columns(4)
     r1.metric("融資維持率", "165.4%", "安全區 (>160%)")
     r2.metric("VIX 恐慌指數", "14.2 點", "市場情緒穩定")
@@ -388,11 +376,11 @@ elif menu == "🛡️ 大盤系統風險濾網":
     
     col_risk1, col_risk2 = st.columns(2)
     with col_risk1:
-        st.markdown("<h4 style='margin-top:20px;'>🛡️ 風控檢核</h4>", unsafe_allow_html=True)
+        st.markdown("<h4 style='margin-top:20px;'>🛡️️ 風控檢核</h4>", unsafe_allow_html=True)
         st.write("• **籌碼清洗**：散戶餘額穩定，無多殺多現象。")
         st.write("• **技術結構**：加權穩守季線(MA60)，多頭架構未破。")
         st.markdown(f"""
-        <div class="ai-panel" style="border-left: 4px solid #059669;">
+        <div class="ai-panel" style="border-left: 4px solid #5c8374;">
             <div>
                 <span class="ai-tag green">風險係數：低</span>
                 <span style="color:#57534e; margin-left:15px; font-size:14px; font-weight:600;">建議維持 7-8 成資金配置。</span>
